@@ -1,14 +1,15 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 import math
 import datetime
 
 # Cleanup
+print("Cleanup")
 
 data = pd.read_csv("data/DataSample.csv")
-data.sort_values(by= ['Latitude', ' TimeSt'], inplace=True, ignore_index=True)
+data.sort_values(by=['Latitude', ' TimeSt'], inplace=True, ignore_index=True)
 filtered = data.copy()
-print(filtered.shape)
 
 for index, row in data.iterrows():
     try:
@@ -22,9 +23,11 @@ for index, row in data.iterrows():
             filtered.drop(index=index, inplace=True)
             filtered.drop(index=index+1, inplace=True)
 
-print(filtered.shape)
+print("Number of requests: " + str(len(data.index)))
+print("Filtered number of requests: " + str(len(filtered.index)) + "\n")
 
 # Label
+print("Adding Labels")
 
 poi = pd.read_csv("data/POIList.csv")
 filtered['ClosestPOI'] = ""
@@ -37,7 +40,7 @@ for index, row in filtered.iterrows():
     for poi_index, poi_row in poi.iterrows():
         latitude_2 = poi_row[' Latitude']
         longitude_2 = poi_row['Longitude']
-        distance = math.hypot(latitude_2 - latitude_1, longitude_2 - longitude_1)
+        distance = math.hypot(longitude_2 - longitude_1, latitude_2 - latitude_1)
         if poi_index == 0:
             min_distance = distance
             min_poi = poi_row['POIID']
@@ -48,9 +51,10 @@ for index, row in filtered.iterrows():
     filtered.at[index, 'ClosestPOI'] = min_poi
     filtered.at[index, 'DistancePOI'] = min_distance
 
-print("Labels added")
+print("Labels added\n")
 
 # Analysis Part 1
+print("Analysis Part 1")
 
 poi['Total'] = 0.0
 poi['Average'] = 0.0
@@ -81,3 +85,40 @@ for index, row in poi.iterrows():
 for index, row in poi.iterrows():
     print(str(row['POIID']) + " average distance: " + str(row['Average']))
     print(str(row['POIID']) + " standard deviation: " + str(row['Std']))
+
+
+# Analysis Part 2
+print("\nAnalysis Part 2")
+
+for index, row in poi.iterrows():
+    if poi.at[index, 'Total'] == 0:
+        continue
+    latitude = row[' Latitude']
+    longitude = row['Longitude']
+    radius = 0
+    fig, ax = plt.subplots()
+    lat_arr = []
+    long_arr = []
+    for filtered_index, filtered_row in filtered.iterrows():
+        if filtered_row['ClosestPOI'] == row['POIID']:
+            ax.plot((filtered_row['Longitude'] - longitude), (filtered_row['Latitude'] - latitude), 'o', color='blue')
+            if filtered_row['DistancePOI'] > radius:
+                radius = filtered_row['DistancePOI']
+    circle = plt.Circle((0, 0), radius, color='r', fill=False)
+    ax.add_patch(circle)
+    plt.title(row['POIID'])
+    plt.xlabel("Longitude")
+    plt.ylabel("Latitude")
+    plt.axhline(y=0, color='black', linestyle='-')
+    plt.axvline(x=0, color='black', linestyle='-')
+    plt.show()
+    area = math.pi * radius * radius
+    density = row['Total'] / area
+    print(str(row['POIID']) + " radius: " + str(radius))
+    print(str(row['POIID']) + " density: " + str(density))
+
+
+
+
+
+
