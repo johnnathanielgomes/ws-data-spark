@@ -116,9 +116,3 @@ for index, row in poi.iterrows():
     density = row['Total'] / area
     print(str(row['POIID']) + " radius: " + str(radius))
     print(str(row['POIID']) + " density: " + str(density))
-
-
-
-
-
-
