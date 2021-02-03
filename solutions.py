@@ -13,7 +13,7 @@ filtered = data.copy()
 
 for index, row in data.iterrows():
     try:
-        next_row = data.iloc[index+1]
+        next_row = data.iloc[index + 1]
     except:
         break
     if next_row['Latitude'] == row['Latitude'] and next_row['Longitude'] == row['Longitude']:
@@ -21,7 +21,7 @@ for index, row in data.iterrows():
         next_date = datetime.datetime.strptime(next_row[' TimeSt'], '%Y-%m-%d %H:%M:%S.%f')
         if date == next_date:
             filtered.drop(index=index, inplace=True)
-            filtered.drop(index=index+1, inplace=True)
+            filtered.drop(index=index + 1, inplace=True)
 
 print("Number of requests: " + str(len(data.index)))
 print("Filtered number of requests: " + str(len(filtered.index)) + "\n")
@@ -73,7 +73,7 @@ for index, row in poi.iterrows():
 
 for index, row in filtered.iterrows():
     poi_index = poi[poi['POIID'] == row['ClosestPOI']].index.values.astype(int)[0]
-    poi.at[poi_index, 'Std'] = poi.at[poi_index, 'Std'] + ((row['DistancePOI'] - poi.at[poi_index, 'Average'])**2)
+    poi.at[poi_index, 'Std'] = poi.at[poi_index, 'Std'] + ((row['DistancePOI'] - poi.at[poi_index, 'Average']) ** 2)
 
 for index, row in poi.iterrows():
     if poi.at[index, 'Total'] == 0:
@@ -85,7 +85,6 @@ for index, row in poi.iterrows():
 for index, row in poi.iterrows():
     print(str(row['POIID']) + " average distance: " + str(row['Average']))
     print(str(row['POIID']) + " standard deviation: " + str(row['Std']))
-
 
 # Analysis Part 2
 print("\nAnalysis Part 2")
@@ -116,3 +115,57 @@ for index, row in poi.iterrows():
     density = row['Total'] / area
     print(str(row['POIID']) + " radius: " + str(radius))
     print(str(row['POIID']) + " density: " + str(density))
+
+# Pipeline Dependency
+
+f = open('text/question.txt', 'r')
+start = f.readline().split()
+start = int(start[len(start) - 1])
+print("\nStart task: " + str(start))
+end = f.readline().split()
+end = int(end[len(end) - 1])
+print("Goal task: " + str(end))
+f.close()
+
+f = open('text/task_ids.txt', 'r')
+ids = f.readline().split(',')
+f.close()
+
+f = open('text/relations.txt', 'r')
+arr = []
+with open('text/relations.txt', 'r') as f:
+    while True:
+        line = f.readline()
+        if not line:
+            break
+        line = line.replace('->', ' ').rstrip().split()
+        arr.append(line)
+
+outputs = []
+
+
+def lookup(current, end_task, array, tasks):
+    if current == end_task:
+        tasks = tasks + "," + str(current)
+        outputs.append(tasks)
+    else:
+        for match in array:
+            if int(match[0]) == current:
+                lookup(int(match[1]), end_task, array, tasks + "," + str(current))
+
+
+lookup(start, end, arr, "")
+
+
+for i in range(len(outputs)):
+    lines = outputs[i][1:len(outputs[i])]
+    lines = lines.split(",")
+    if i == 0:
+        min_output = len(lines)
+        min_index = i
+    elif len(lines) < min_output:
+        min_output = len(lines)
+        min_index = i
+
+best_output = lines = outputs[min_index][1:len(outputs[min_index])]
+print("The best output for the pipeline dependency is " + best_output)
